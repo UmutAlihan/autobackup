@@ -10,12 +10,12 @@ import pinger
 import database
 
 
-
+ip_test_on = "127.0.0.1"
 ip_bp = "192.168.1.202"
 ip_afsar = "192.168.1.200"
 
 wait_betw_pingchecks = 0.1
-wait_after_pingcheck_closed = 5
+wait_after_pingcheck_done = 3
 
 servo_on_angle = 10
 servo_off_angle = 40
@@ -32,13 +32,17 @@ def temp_machine(cmd):
 
 def turn_on():
 	#send servo command
-	servo_on = "python3 servo.py 10"
+	
 	return temp_machine(servo_on)  ###ana makineye geçince kalkmali
 
 def turn_on_test():
-	print("servo ile rpi açıyorum")
-	database.write("servoangle", )
-
+	try:
+		print("Şu komutu göndererek servo ile rpi açıyorum:")
+		database.write("servoangle", servo_on_angle)
+		servo_on = "python3 servo.py 10"
+		print("ssh -p37214 -t uad@192.168.1.200 {}".format(servo_on))
+	except:
+		print("turn_on_test() failed!")
 
 def turn_off():
 	#send shutdown command
@@ -55,6 +59,9 @@ def turn_off():
 	temp_machine(servo_off)  ###ana makineye geçince kalkmali
 
 
+def start_backup_test():
+	print("starting backup with command below")
+	print("ssh -t uad@192.168.1.202 {}".format(cmd_start_backup))
 
 def start_backup():
 	#run remote bp-all.sh
@@ -74,11 +81,21 @@ period = {
 
 p = "test"
 
-for i in range(100):  #cron ise dongu gereksiz
-	while(database.read("onoff") == 1):
-		print("ok 1")
-	while(database.read("onoff") == 0):
-		print("ok 0")
+#for i in range(100):  #cron ise dongu gereksiz
+while(database.read("onoff") == 0):
+	turn_on_test()
+	while(pinger.is_online(ip_test_on) != True):
+		time.sleep(wait_betw_pingchecks)
+		print("henüz offline")
+	print("online oldu!")
+	time.sleep(wait_after_pingcheck_done)
+	start_backup_test()
+
+
+
+
+while(database.read("onoff") == 0):
+	print("ok 0")
 
 
 ####bu script rpi-r tarafından supervisorctl/cron ile çalıştırılacak
