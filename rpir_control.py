@@ -14,11 +14,13 @@ import database
 ip_bp = "192.168.1.202"
 ip_afsar = "192.168.1.200"
 
-
 wait_betw_pingchecks = 0.1
 wait_after_pingcheck_closed = 5
 
-##pasword soruyor hala .200 ve .199 da!!!
+servo_on_angle = 10
+servo_off_angle = 40
+
+##pasword soruyor hala .200 ve .199 da!!! ssh read permissonlar! 
 cmd_start_backup = "sudo sh /home/uad/backup/bp_all.sh"
 cmd_shutdown = "sudo shutdown -Pf now"
 
@@ -32,6 +34,10 @@ def turn_on():
 	#send servo command
 	servo_on = "python3 servo.py 10"
 	return temp_machine(servo_on)  ###ana makineye geçince kalkmali
+
+def turn_on_test():
+	print("servo ile rpi açıyorum")
+	database.write("servoangle", )
 
 
 def turn_off():
@@ -69,7 +75,10 @@ period = {
 p = "test"
 
 for i in range(100):  #cron ise dongu gereksiz
-
+	while(database.read("onoff") == 1):
+		print("ok 1")
+	while(database.read("onoff") == 0):
+		print("ok 0")
 
 
 ####bu script rpi-r tarafından supervisorctl/cron ile çalıştırılacak
