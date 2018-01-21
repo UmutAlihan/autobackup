@@ -5,7 +5,6 @@ import time
 import sys
 import os
 
-
 import pinger
 import database
 import process_checker
@@ -22,7 +21,7 @@ nextbp_p = "test"
 
 #ip addresses to check whether machines are online/offline
 #wait periods for ping controls
-ip_test_on = "192.168.0.26"
+ip_test_on = "192.168.0.207"
 ip_bp = "192.168.1.202"
 ip_afsar = "192.168.1.200"
 wait_betw_pingchecks = 0.1
@@ -35,19 +34,11 @@ servo_off_angle = 40
 
 ##pasword soruyor hala .200 ve .199 da!!! ssh read permissonlar! 
 #obvious as in var name
-cmd_start_backup = "sudo sh /home/uad/backup/bp_all.sh"
-cmd_shutdown = "sudo shutdown -Pf now"
+cmd_start_backup = "ssh uad@192.168.1.202 'sh /home/uad/backup/bp_all.sh'"
+cmd_shutdown = "ssh uad@192.168.1.202 'shutdown -Pf now'"
 
 
 
-def temp_machine(cmd):
-	os.system("ssh -p37214 -t uad@192.168.1.200 {}".format(cmd))
-
-
-def turn_on():
-	#send servo command
-	
-	return temp_machine(servo_on)  ###ana makineye geçince kalkmali
 
 def turn_on_test():
 	try:
@@ -58,11 +49,9 @@ def turn_on_test():
 	except:
 		print("turn_on_test() failed!")
 
-
-
 def turn_off_test():
 	print("sending shut down command:")
-	print("ssh -t uad@192.168.1.202 {}".format(cmd_shutdown))
+	print("ssh uad@192.168.1.202 {}".format(cmd_shutdown))
 	while(pinger.is_online(ip_test_on) == True):
 		time.sleep(wait_betw_pingchecks)
 		print("turning off, still online")
@@ -92,8 +81,8 @@ def turn_off():
 def start_backup_test():
 	try:
 		print("starting backup with command below")
-		print("ssh -t uad@192.168.1.202 {}".format(cmd_start_backup))
-		cmd = "sh {}/test_proc.sh".format(os.getcwd())
+		print("ssh uad@192.168.1.202 {}".format(cmd_start_backup))
+		cmd = "sh {}/test_proc.sh".format(os.getcwd()) ###buraya backup commandi gelmeli
 		os.system(cmd)
 	except:
 		print("start_backup_test() failed")
@@ -108,7 +97,7 @@ def start_backup():
 
 def process_status_test():
 	try:
-		return process_checker.check("proc_backup")
+		return process_checker.check("proc_backup")  ###process ismini güncelle!
 	except:
 		print("process_status_test() failed")
 
@@ -123,7 +112,7 @@ period = {
 	"test":5
 }
 
-for i in range(100):  #cron ise dongu gereksiz
+for i in range(100):  #cron ise dongu gereksiz #supervisorctl ile kontrol edilecek!
 	while(database.read("onoff") == 0):
 		print("1")
 		turn_on_test()
@@ -148,9 +137,9 @@ for i in range(100):  #cron ise dongu gereksiz
 		while(database.read("backingup") == 1):
 			print("9")
 			#checking whether the backup process is still alive
-			proc_status = process_status_test()
+			#proc_status = process_status_test()
 			print("10")
-			while(proc_status == "alive"):
+			while(process_status_test() == "alive"):
 				time.sleep(1)
 			print("11")
 			database.write("backingup", "0")
