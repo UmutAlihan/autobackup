@@ -11,31 +11,41 @@ import process_checker
 
 ###database folder need to be in flash disk to avoid sdcard corruptions
 
+
 ####initiation of db for test purposes####
 database.write("onoff", "0")
 database.write("backingup", "0")
 ##################need to be erased for reallife execution
 
+
 #period between two backup sessions
 nextbp_p = "test"
 
+
+
 #ip addresses to check whether machines are online/offline
 #wait periods for ping controls
-ip_test_on = "192.168.0.207"
+ip_test_on = "192.168.1.207"
 ip_bp = "192.168.1.202"
 ip_afsar = "192.168.1.200"
 wait_betw_pingchecks = 0.1
 wait_after_pingcheck_done = 5
 
+
+
+
 #obvious as in var name
 ####need constantly sending signal by another script for failed voltages disruptions
 servo_on_angle = 10
-servo_off_angle = 40
+servo_off_angle = 60
+
 
 ##pasword soruyor hala .200 ve .199 da!!! ssh read permissonlar! 
 #obvious as in var name
 cmd_start_backup = "ssh uad@192.168.1.202 'sh /home/uad/backup/bp_all.sh'"
 cmd_shutdown = "ssh uad@192.168.1.202 'shutdown -Pf now'"
+
+
 
 
 
@@ -60,6 +70,22 @@ def turn_off_test():
 	print("sending command:")
 	print("python3 servo.py 40")
 
+def start_backup_test():
+	try:
+		print("starting backup with command below")
+		print("ssh uad@192.168.1.202 {}".format(cmd_start_backup))
+		cmd = "sh {}/test_proc.sh".format(os.getcwd()) ###buraya backup commandi gelmeli
+		os.system(cmd)
+	except:
+		print("start_backup_test() failed")
+
+def process_status_test():
+	try:
+		return process_checker.check("proc_backup")  ###process ismini güncelle!
+	except:
+		print("process_status_test() failed")
+
+
 
 
 
@@ -78,16 +104,6 @@ def turn_off():
 	temp_machine(servo_off)  ###ana makineye geçince kalkmali
 
 
-def start_backup_test():
-	try:
-		print("starting backup with command below")
-		print("ssh uad@192.168.1.202 {}".format(cmd_start_backup))
-		cmd = "sh {}/test_proc.sh".format(os.getcwd()) ###buraya backup commandi gelmeli
-		os.system(cmd)
-	except:
-		print("start_backup_test() failed")
-
-
 def start_backup():
 	#run remote bp-all.sh
 	try:
@@ -95,11 +111,6 @@ def start_backup():
 	except:
 		start_backup()
 
-def process_status_test():
-	try:
-		return process_checker.check("proc_backup")  ###process ismini güncelle!
-	except:
-		print("process_status_test() failed")
 
 
 
@@ -111,6 +122,8 @@ period = {
 	"month": 2629743,
 	"test":5
 }
+
+
 
 for i in range(100):  #cron ise dongu gereksiz #supervisorctl ile kontrol edilecek!
 	while(database.read("onoff") == 0):
@@ -137,7 +150,7 @@ for i in range(100):  #cron ise dongu gereksiz #supervisorctl ile kontrol edilec
 		while(database.read("backingup") == 1):
 			print("9")
 			#checking whether the backup process is still alive
-			#proc_status = process_status_test()
+			# proc_status = process_status_test()
 			print("10")
 			while(process_status_test() == "alive"):
 				time.sleep(1)
