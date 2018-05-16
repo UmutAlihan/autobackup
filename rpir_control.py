@@ -21,7 +21,7 @@ nextbp_p = "test"
 
 #ip addresses to check whether machines are online/offline
 #wait periods for ping controls
-ip_test_on = "192.168.0.207"
+ip_test_on = "192.168.1.207"
 ip_bp = "192.168.1.202"
 ip_afsar = "192.168.1.200"
 wait_betw_pingchecks = 0.1
@@ -137,7 +137,7 @@ for i in range(100):  #cron ise dongu gereksiz #supervisorctl ile kontrol edilec
 		while(database.read("backingup") == 1):
 			print("9")
 			#checking whether the backup process is still alive
-			#proc_status = process_status_test()
+			# proc_status = process_status_test()
 			print("10")
 			while(process_status_test() == "alive"):
 				time.sleep(1)
