@@ -137,7 +137,7 @@ period = {
 for i in range(100):  #cron ise dongu gereksiz #supervisorctl ile kontrol edilecek!
 	while(database.read("onoff") == 0):
 		print("1")
-		turn_on_test()
+		turn_on()
 		print("2")
 		#checking whether remote machine is turned on
 		while(pinger.is_online(ip_test_on) != True):
