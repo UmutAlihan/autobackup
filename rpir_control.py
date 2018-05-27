@@ -12,6 +12,12 @@ import process_checker
 ###database folder need to be in flash disk to avoid sdcard corruptions
 
 
+###This script should run on home server
+#rpi-r
+
+
+
+
 ####initiation of db for test purposes####
 database.write("onoff", "0")
 database.write("backingup", "0")
@@ -19,45 +25,65 @@ database.write("backingup", "0")
 
 
 #period between two backup sessions
+######################################################
 nextbp_p = "test"
-
+######################################################
 
 
 #ip addresses to check whether machines are online/offline
-#wait periods for ping controls
-ip_test_on = "192.168.1.207"
+######################################################
+ip_test_on = "192.168.1.199"
 ip_bp = "192.168.1.202"
 ip_afsar = "192.168.1.200"
+######################################################
+
+
+#wait periods for ping controls
+######################################################
 wait_betw_pingchecks = 0.1
 wait_after_pingcheck_done = 5
-
-
+######################################################
 
 
 #obvious as in var name
-####need constantly sending signal by another script for failed voltages disruptions
+######################################################
 servo_on_angle = 10
 servo_off_angle = 60
+######################################################
 
-
-##pasword soruyor hala .200 ve .199 da!!! ssh read permissonlar! 
+ 
 #obvious as in var name
-cmd_start_backup = "ssh uad@192.168.1.202 'sh /home/uad/backup/bp_all.sh'"
-cmd_shutdown = "ssh uad@192.168.1.202 'shutdown -Pf now'"
+######################################################
+cmd_run_backup = "ssh uad@192.168.1.202 'sh /home/uad/backup/bp_all.sh'"
+cmd_shutdown = "ssh uad@192.168.1.202 'shutdown -h now'"
+cmd_turn_on = "/usr/bin/python3 /home/uad/autobackup/servo_button.py"
+######################################################
 
 
 
 
 
-
-def turn_on_test():
+def turn_on():
 	try:
-		print("Şu komutu göndererek servo ile rpi açıyorum:")
-		database.write("servoangle", servo_on_angle)
-		servo_on = "python3 servo.py 10"
-		print(servo_on)
+		print("AUTOBACKEPER: {}".format(cmd_turn_on))
+		os.system(cmd_turn_on)
 	except:
-		print("turn_on_test() failed!")
+		print("turn_on() failed!")
+
+def turn_off():
+	#send shutdown command
+	#os.system("ssh -t uad@192.168.1.202 {}".format(cmd_shutdown))
+	#temp_machine(cmd_shutdown)
+	#wait until shutdown complete
+	while(pinger.is_online(ip_bp)):
+		time.sleep(wait_betw_pingchecks)
+		print("turning off, still online")
+	time.sleep(wait_after_pingcheck_done)
+	print("now offline")
+	#send servo command
+	servo_off = "python3 servo.py 40"
+	temp_machine(servo_off)  ###ana makineye geçince kalkmali
+
 
 def turn_off_test():
 	print("sending shut down command:")
@@ -88,20 +114,6 @@ def process_status_test():
 
 
 
-
-def turn_off():
-	#send shutdown command
-	#os.system("ssh -t uad@192.168.1.202 {}".format(cmd_shutdown))
-	#temp_machine(cmd_shutdown)
-	#wait until shutdown complete
-	while(pinger.is_online(ip_bp)):
-		time.sleep(wait_betw_pingchecks)
-		print("turning off, still online")
-	time.sleep(wait_after_pingcheck_done)
-	print("now offline")
-	#send servo command
-	servo_off = "python3 servo.py 40"
-	temp_machine(servo_off)  ###ana makineye geçince kalkmali
 
 
 def start_backup():
