@@ -9,7 +9,12 @@ import pinger
 import database
 import process_checker
 
+
+
 ###database folder need to be in flash disk to avoid sdcard corruptions
+
+#TODO:
+#1)çalıştığı yerin PATH'ini değişkne alsın!
 
 
 ###This script should run on home server
