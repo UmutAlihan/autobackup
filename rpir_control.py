@@ -89,10 +89,10 @@ def start_backup():
 	try:
 		#sending backup command
 		print("AUTOBACKUP: running backup")
-		if(bp_p = "test"):
+		if(bp_p == "test"):
 			print("AUTOBACKUP: (test run)")
 			os.system("sh {}/{}".format(os.getcwd(),test_run))
-		elif(bp_p = "production")
+		elif(bp_p == "production")
 			os.system(cmd_run_backup)
 	except:
 		if(n < 5):
@@ -102,12 +102,6 @@ def start_backup():
 		else:
 			break
 
-
-def process_status():
-	try:
-		return process_checker.check("proc_backup")  ###process ismini güncelle!
-	except:
-		print("process_status_test() failed")
 
 
 def process_check(proc_data):
