@@ -92,7 +92,7 @@ def start_backup():
 		if(bp_p == "test"):
 			print("AUTOBACKUP: (test run)")
 			os.system("sh {}/{}".format(os.getcwd(),test_run))
-		elif(bp_p == "production")
+		elif(bp_p == "production"):
 			os.system(cmd_run_backup)
 	except:
 		if(n < 5):
