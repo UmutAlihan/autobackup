@@ -15,6 +15,7 @@ import process_checker
 ###This script should run on home server
 #rpi-r
 
+## 1)shutdown without root pass -> sudo chmod u+s /sbin/shutdown
 
 
 
@@ -26,7 +27,7 @@ database.write("backingup", "0")
 
 #period between two backup sessions
 ######################################################
-nextbp_p = "test"
+bp_p = "test"
 ######################################################
 
 
@@ -40,7 +41,7 @@ ip_afsar = "192.168.1.200"
 
 #wait periods for ping controls
 ######################################################
-wait_betw_pingchecks = 0.1
+wait_betw_pingchecks = 1
 wait_after_pingcheck_done = 5
 ######################################################
 
@@ -57,6 +58,7 @@ servo_off_angle = 60
 cmd_run_backup = "ssh uad@192.168.1.202 'sh /home/uad/backup/bp_all.sh'"
 cmd_shutdown = "ssh uad@192.168.1.202 'shutdown -h now'"
 cmd_turn_on = "/usr/bin/python3 /home/uad/autobackup/servo_button.py"
+test_run = "test_proc.sh"
 ######################################################
 
 
@@ -65,63 +67,63 @@ cmd_turn_on = "/usr/bin/python3 /home/uad/autobackup/servo_button.py"
 
 def turn_on():
 	try:
-		print("AUTOBACKEPER: {}".format(cmd_turn_on))
+		print("AUTOBACKUP: {}".format(cmd_turn_on))
 		os.system(cmd_turn_on)
 	except:
 		print("turn_on() failed!")
 
 def turn_off():
 	#send shutdown command
-	#os.system("ssh -t uad@192.168.1.202 {}".format(cmd_shutdown))
-	#temp_machine(cmd_shutdown)
+	print("AUTOBACKUP: shutting rpiw down")
+	os.system("ssh uad@192.168.1.202 {}".format(cmd_shutdown))
 	#wait until shutdown complete
 	while(pinger.is_online(ip_bp)):
 		time.sleep(wait_betw_pingchecks)
-		print("turning off, still online")
+		print("AUTOBACKUP: waiting for shutdown")
 	time.sleep(wait_after_pingcheck_done)
-	print("now offline")
-	#send servo command
-	servo_off = "python3 servo.py 40"
-	temp_machine(servo_off)  ###ana makineye geçince kalkmali
+	print("AUTOBACKUP: now offline")
 
 
-def turn_off_test():
-	print("sending shut down command:")
-	print("ssh uad@192.168.1.202 {}".format(cmd_shutdown))
-	while(pinger.is_online(ip_test_on) == True):
-		time.sleep(wait_betw_pingchecks)
-		print("turning off, still online")
-	print("now offline")
-	time.sleep(wait_after_pingcheck_done)
-	print("sending command:")
-	print("python3 servo.py 40")
-
-def start_backup_test():
+n = 1
+def start_backup():
 	try:
-		print("starting backup with command below")
-		print("ssh uad@192.168.1.202 {}".format(cmd_start_backup))
-		cmd = "sh {}/test_proc.sh".format(os.getcwd()) ###buraya backup commandi gelmeli
-		os.system(cmd)
+		#sending backup command
+		print("AUTOBACKUP: running backup")
+		if(bp_p = "test"):
+			print("AUTOBACKUP: (test run)")
+			os.system("sh {}/{}".format(os.getcwd(),test_run))
+		elif(bp_p = "production")
+			os.system(cmd_run_backup)
 	except:
-		print("start_backup_test() failed")
+		if(n < 5):
+			print("AUTOBACKUP: failed trying again")
+			start_backup()
+			n = n+1
+		else:
+			break
 
-def process_status_test():
+
+def process_status():
 	try:
 		return process_checker.check("proc_backup")  ###process ismini güncelle!
 	except:
 		print("process_status_test() failed")
 
 
-
-
-
-
-def start_backup():
-	#run remote bp-all.sh
+def process_check(proc_data):
 	try:
-		os.system("ssh -t uad@192.168.1.202 {}".format(cmd_start_backup))
+		cmd = """ps auxw | grep {} | grep -v grep > /dev/null
+		if [ $? = 0 ]
+		then
+		        echo "alive"
+		else
+	        echo "dead"
+		fi""".format(proc_data)
+		status = subprocess.check_output(cmd, shell=True)
+		return status.decode("utf-8").strip("\n")
 	except:
-		start_backup()
+		print("process_status_test() failed")
+
 
 
 
