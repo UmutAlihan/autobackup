@@ -140,7 +140,7 @@ for i in range(100):  #cron ise dongu gereksiz #supervisorctl ile kontrol edilec
 		turn_on()
 		print("2")
 		#checking whether remote machine is turned on
-		while(pinger.is_online(ip_test_on) != True):
+		while(pinger.is_online(ip_bp) != True):
 			time.sleep(wait_betw_pingchecks)
 			print("still offline")
 		print("online!")
@@ -148,7 +148,7 @@ for i in range(100):  #cron ise dongu gereksiz #supervisorctl ile kontrol edilec
 		time.sleep(wait_after_pingcheck_done)
 		print("4")
 		print("5")
-		start_backup_test()
+		start_backup()
 		print("6")
 		database.write("backingup", "1")
 		database.write("onoff", "1")
@@ -161,12 +161,12 @@ for i in range(100):  #cron ise dongu gereksiz #supervisorctl ile kontrol edilec
 			#checking whether the backup process is still alive
 			# proc_status = process_status_test()
 			print("10")
-			while(process_status_test() == "alive"):
+			while(process_check() == "alive"):
 				time.sleep(1)
 			print("11")
 			database.write("backingup", "0")
 		print("12")
-		turn_off_test()	
+		turn_off()	
 		print("13")
 		database.write("onoff","0")
 		print("14")
