@@ -100,7 +100,8 @@ def start_backup():
 			start_backup()
 			n = n+1
 		else:
-			break
+			print("AUTOBACKUP: start_backup() failed exiting")
+			sys.exit()
 
 
 
