@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
+
 import configparser
 import time
-import sys
-#import database
+
 
 
 def read(data):
@@ -18,20 +18,18 @@ def write(data, new_state):
 	with open("./config.ini", "w+") as conf_file:
 		config.write(conf_file)
 
+
 config = configparser.ConfigParser()
 
-week = 604800
-day = 86400
-month = 2629743
-test = 10
 
-period = test
+### ssh ile ulaşıp öyle bu komutları çalıştırmalı! rpir'de buna özel script olsn
+write("backingup", 0)
+write("canclose", 1)
+write("runtime", time.time())
 
-if((time.time() - read("runtime")) > test):
-	print("time to turn on")
-else:
-	print("time to wait")
 
-	#wrte("runbool", 0)
-#else 
-	#pass
+#####Bu script rpi-backup bash tarafından, backuplar tamamlanınca çalıştırılacak
+
+####root user ssh keys!
+###start bp_all.sh
+### if psaux backup script bitti -> canclose!

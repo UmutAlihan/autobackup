@@ -3,7 +3,6 @@
 import configparser
 import time
 import sys
-#import database
 
 
 def read(data):
