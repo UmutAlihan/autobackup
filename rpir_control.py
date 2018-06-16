@@ -49,7 +49,7 @@ ip_afsar = "192.168.1.200"
 wait_betw_pingchecks = 1
 wait_after_pingcheck_done = 5
 ######################################################
-
+ot
 
 #obvious as in var name
 ######################################################
