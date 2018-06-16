@@ -95,7 +95,7 @@ def turn_on():
 	#Input: -
 	#Output: physical servo movement, turn on
 	try:
-		inform("AUTOBACKUP: {}".format(cmd_turn_on))
+		#inform("AUTOBACKUP: {}".format(cmd_turn_on))
 		os.system(cmd_turn_on)
 	except Exception as e:
 		inform("AUTOBACKUP: turn_on() failed! -> {}".format(e))
@@ -193,6 +193,6 @@ for i in range(3): #-> dongu supervisorctl ile çalışacak
 	database.write("runtime", time.time())
 	inform("AUTOBACKUP: waiting for next backup period")
 	while((time.time() - database.read("runtime")) < period[next_backup_period]):
-			if(((time.time() - database.read("runtime") < (period["day"]+50) or (time.time() - database.read("runtime") > (period["day"]-50))
+			if(((time.time() - database.read("runtime") < (int(period["day"])+50)) and (time.time() - database.read("runtime") > (int(period["day"])-50)))):
 				inform("AUTOBACKUP: 1 day left for next backup period")
 			time.sleep(sleep_time)
