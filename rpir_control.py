@@ -6,6 +6,7 @@ import sys
 import subprocess
 import inspect
 import os
+import telegram_send
 
 import pinger
 import database
@@ -15,12 +16,10 @@ import process_checker
 
 ###TODO:
 #database folder need to be in flash disk to avoid sdcard corruptions
-
+#telegram-send for all print statements
 
 ###This script should run on home server
 #rpi-r
-
-## 1)shutdown without root pass -> sudo chmod u+s /sbin/shutdown
 
 
 #some vars
@@ -34,7 +33,7 @@ runtime_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfr
 ######################################################
 next_backup_period = "test"
 if(next_backup_period == "test"): sleep_time = 1
-else: sleep_time = 10
+else: sleep_time = 60
 period = {
 	"week": 604800,
 	"day": 86400,
@@ -81,17 +80,26 @@ run_test_proc = "test_proc.sh"
 
 #functions
 ######################################################
+
+def inform(msg):
+	telegram_send.send(messages=[msg])
+	print(msg)
+
+def send_cmd_parse_return(cmd):
+	return subprocess.check_output(cmd, shell=True).decode("utf-8").strip("\n")
+
+
+
 def turn_on():
 	#Description: controls gpio-servo to physcially turn on backup machine
 	#Input: -
 	#Output: physical servo movement, turn on
 	try:
-
-		print("AUTOBACKUP: {}".format(cmd_turn_on))
+		inform("AUTOBACKUP: {}".format(cmd_turn_on))
 		os.system(cmd_turn_on)
 	except Exception as e:
-		print("AUTOBACKUP: turn_on() failed! -> {}".format(e))
-
+		inform("AUTOBACKUP: turn_on() failed! -> {}".format(e))
+		
 
 
 def turn_off():
@@ -102,9 +110,9 @@ def turn_off():
 	#wait until shutdown complete
 	while(pinger.is_online(ip_backup)):
 		time.sleep(wait_betw_pingchecks)
-		print("AUTOBACKUP: waiting for shutdown")
+		inform("AUTOBACKUP: waiting for shutdown")
 	time.sleep(wait_after_pingcheck_done)
-	print("AUTOBACKUP: now offline")
+	inform("AUTOBACKUP: now offline")
 
 
 
@@ -116,22 +124,17 @@ def start_backup(n):
 	try:
 		#send backup command
 		if(next_backup_period == "test"):
-			print("AUTOBACKUP: running backup, test run (test_proc.sh)")
+			inform("AUTOBACKUP: running backup, test run (test_proc.sh)")
 			os.system("sh {}/{}".format(runtime_path, run_test_proc))
 		elif(bp_p == "production"):
-			print("AUTOBACKUP: running bp_all.sh ")
+			inform("AUTOBACKUP: running bp_all.sh ")
 			os.system(cmd_run_backup)
 	except Exception as e:
 		n -= 1
 		if(n > 0):
-			print("AUTOBACKUP: start_backup() failed, trying again")
+			inform("AUTOBACKUP: start_backup() failed, trying again")
 			start_backup(n)
-		print("AUTOBACKUP: startup_backup() failed! -> {}".format(e))
-
-
-
-def send_cmd_parse_return(cmd):
-	return subprocess.check_output(cmd, shell=True).decode("utf-8").strip("\n")
+		inform("AUTOBACKUP: startup_backup() failed! -> {}".format(e))
 
 
 
@@ -146,7 +149,7 @@ def process_check(proc_data):
 		fi""".format(proc_data)
 		return send_cmd_parse_return(cmd)
 	except Exception as e:
-		print("AUTOBACKUP: process_check() failed! -> {}".format(e))
+		inform("AUTOBACKUP: process_check() failed! -> {}".format(e))
 ######################################################
 
 
@@ -165,13 +168,13 @@ database.write("backingup", "0")
 for i in range(3): #-> dongu supervisorctl ile çalışacak
 	#before backup process
 	while(database.read("onoff") == 0):
-		print("AUTOBACKUP: backup_machine turning on")
+		inform("AUTOBACKUP: backup_machine turning on")
 		turn_on()
 		while(pinger.is_online(ip_backup) != True):
-			print("AUTOBACKUP: backup machine still offline, waiting for boot")
-		print("AUTOBACKUP: backup_machine online!")
+			inform("AUTOBACKUP: backup machine still offline, waiting for boot")
+		inform("AUTOBACKUP: backup_machine online!")
 		time.sleep(wait_after_pingcheck_done)
-		print("AUTOBACKUP: backup started")
+		inform("AUTOBACKUP: backup started")
 		start_backup(5)
 		database.write("backingup", "1")
 		database.write("onoff", "1")
@@ -181,13 +184,13 @@ for i in range(3): #-> dongu supervisorctl ile çalışacak
 		while(database.read("backingup") == 1):
 			while(process_check(run_test_proc) == "alive"):
 				time.sleep(1)
-			print("AUTOBACKUP: backup done")
+			inform("AUTOBACKUP: backup done")
 			database.write("backingup", "0")
-		print("AUTOBACKUP: shutting down")
+		inform("AUTOBACKUP: shutting down")
 		turn_off()
 		database.write("onoff","0")
-	print("AUTOBACKUP: entering wait_for_next_period")	
+	inform("AUTOBACKUP: entering wait_for_next_period")	
 	database.write("runtime", time.time())
 	while((time.time() - database.read("runtime")) < period[next_backup_period]):
-			print("AUTOBACKUP: waiting for next backup period")
+			inform("AUTOBACKUP: waiting for next backup period")
 			time.sleep(sleep_time)
