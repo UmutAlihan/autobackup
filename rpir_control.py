@@ -191,6 +191,8 @@ for i in range(3): #-> dongu supervisorctl ile çalışacak
 		database.write("onoff","0")
 	inform("AUTOBACKUP: entering wait_for_next_period")	
 	database.write("runtime", time.time())
+	inform("AUTOBACKUP: waiting for next backup period")
 	while((time.time() - database.read("runtime")) < period[next_backup_period]):
-			inform("AUTOBACKUP: waiting for next backup period")
+			if(((time.time() - database.read("runtime") < (period["day"]+50) or (time.time() - database.read("runtime") > (period["day"]-50))
+				inform("AUTOBACKUP: 1 day left for next backup period")
 			time.sleep(sleep_time)
