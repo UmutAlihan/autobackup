@@ -66,7 +66,7 @@ servo_off_angle = 60
 ######################################################
 cmd_run_backup = "ssh uad@{} 'sh /home/uad/backup/bp_all.sh'".format(ip_backup)
 cmd_shutdown = "ssh uad@{} 'shutdown -h now'".format(ip_backup)
-cmd_turn_on = "/usr/bin/python3 /home/uad/autobackup/servo_button.py"
+cmd_turn_on = "/usr/bin/python3 /home/uad/prog/backup/autobackup/servo_button.py"
 run_test_proc = "test_proc.sh"
 ######################################################
 
