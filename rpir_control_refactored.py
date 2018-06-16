@@ -166,9 +166,9 @@ for i in range(3): #-> dongu supervisorctl ile çalışacak
 	#before backup process
 	while(database.read("onoff") == 0):
 		print("AUTOBACKUP: backup_machine turning on")
-		#turn_on()
-		#while(pinger.is_online(ip_backup) != True):
-		#	print("AUTOBACKUP: backup machine still offline, waiting for boot")
+		turn_on()
+		while(pinger.is_online(ip_backup) != True):
+			print("AUTOBACKUP: backup machine still offline, waiting for boot")
 		print("AUTOBACKUP: backup_machine online!")
 		time.sleep(wait_after_pingcheck_done)
 		print("AUTOBACKUP: backup started")
