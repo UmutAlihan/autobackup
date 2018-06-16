@@ -157,8 +157,8 @@ def process_check(proc_data):
 
 
 ####initiation of db for test purposes####
-database.write("onoff", "0")
-database.write("backingup", "0")
+#database.write("onoff", "0")
+#database.write("backingup", "0")
 ##################need to be erased for reallife execution
 
 
