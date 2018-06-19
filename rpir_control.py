@@ -3,7 +3,10 @@
 import configparser
 import time
 import sys
+import subprocess
+import inspect
 import os
+import telegram_send
 
 import pinger
 import database
@@ -11,36 +14,41 @@ import process_checker
 
 
 
-###database folder need to be in flash disk to avoid sdcard corruptions
-
-#TODO:
-#1)çalıştığı yerin PATH'ini değişkne alsın!
-
+###TODO:
+#database folder need to be in flash disk to avoid sdcard corruptions
+#telegram-send for all print statements
 
 ###This script should run on home server
 #rpi-r
 
-## 1)shutdown without root pass -> sudo chmod u+s /sbin/shutdown
 
-
-
-####initiation of db for test purposes####
-database.write("onoff", "0")
-database.write("backingup", "0")
-##################need to be erased for reallife execution
-
-
-#period between two backup sessions
+#some vars
 ######################################################
-bp_p = "test"
+config = configparser.ConfigParser()
+runtime_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+######################################################
+
+
+#period related variables
+######################################################
+next_backup_period = "day"
+if(next_backup_period == "test"): sleep_time = 1
+else: sleep_time = 60
+period = {
+	"week": 604800,
+	"day": 86400,
+	"month": 2629743,
+	"test":5
+}
 ######################################################
 
 
 #ip addresses to check whether machines are online/offline
 ######################################################
-ip_test_on = "192.168.1.199"
-ip_bp = "192.168.1.202"
+test_ip_state_on = "192.168.1.199"
+ip_backup = "192.168.1.202"
 ip_afsar = "192.168.1.200"
+check_my_ip = "ifconfig"
 ######################################################
 
 
@@ -60,53 +68,78 @@ servo_off_angle = 60
  
 #obvious as in var name
 ######################################################
-cmd_run_backup = "ssh uad@192.168.1.202 'sh /home/uad/backup/bp_all.sh'"
-cmd_shutdown = "ssh uad@192.168.1.202 'shutdown -h now'"
-cmd_turn_on = "/usr/bin/python3 /home/uad/autobackup/servo_button.py"
-test_run = "test_proc.sh"
+cmd_run_backup = "ssh uad@{} 'sh /home/uad/backup/bp_all.sh'".format(ip_backup)
+cmd_shutdown = "ssh uad@{} 'shutdown -h now'".format(ip_backup)
+cmd_turn_on = "/usr/bin/python3 {}/servo_button.py".format(runtime_path)
+run_test_proc = "test_proc.sh"
+run_proc = "bp_all.sh"
+if(next_backup_period  == "test"):
+	proc_to_check = run_test_proc
+else:
+	proc_to_check = run_proc
 ######################################################
 
 
 
 
 
+#functions
+######################################################
+
+def inform(msg):
+	telegram_send.send(messages=[msg])
+	print(msg)
+
+def send_cmd_parse_return(cmd):
+	return subprocess.check_output(cmd, shell=True).decode("utf-8").strip("\n")
+
+
+
 def turn_on():
+	#Description: controls gpio-servo to physcially turn on backup machine
+	#Input: -
+	#Output: physical servo movement, turn on
 	try:
-		print("AUTOBACKUP: {}".format(cmd_turn_on))
+		#inform("AUTOBACKUP: {}".format(cmd_turn_on))
 		os.system(cmd_turn_on)
-	except:
-		print("turn_on() failed!")
+	except Exception as e:
+		inform("AUTOBACKUP: turn_on() failed! -> {}".format(e))
+
+
 
 def turn_off():
-	#send shutdown command
-	print("AUTOBACKUP: shutting rpiw down")
-	os.system("ssh uad@192.168.1.202 {}".format(cmd_shutdown))
+	#Description: sends shutdown shell command to turn of backup machine
+	#Input: -
+	#Output: shell command, shutdown
+	os.system(cmd_shutdown)
 	#wait until shutdown complete
-	while(pinger.is_online(ip_bp)):
+	while(pinger.is_online(ip_backup)):
 		time.sleep(wait_betw_pingchecks)
-		print("AUTOBACKUP: waiting for shutdown")
+		inform("AUTOBACKUP: waiting for shutdown")
 	time.sleep(wait_after_pingcheck_done)
-	print("AUTOBACKUP: now offline")
+	inform("AUTOBACKUP: now offline")
 
 
-n = 1
-def start_backup():
+
+def start_backup(n):
+	time.sleep(0.1)
+	#Description: sends backup shell command or runs test proccess
+	#Input: retry count
+	#Output: shel command, test_proc.sh or bp_all.sh
 	try:
-		#sending backup command
-		print("AUTOBACKUP: running backup")
-		if(bp_p == "test"):
-			print("AUTOBACKUP: (test run)")
-			os.system("sh {}/{}".format(os.getcwd(),test_run))
-		elif(bp_p == "production"):
-			os.system(cmd_run_backup)
-	except:
-		if(n < 5):
-			print("AUTOBACKUP: failed trying again")
-			start_backup()
-			n = n+1
+		#send backup command
+		if(next_backup_period == "test"):
+			inform("AUTOBACKUP: running backup, test run (test_proc.sh)")
+			os.system("sh {}/{}".format(runtime_path, run_test_proc))
 		else:
-			print("AUTOBACKUP: start_backup() failed exiting")
-			sys.exit()
+			inform("AUTOBACKUP: running bp_all.sh ")
+			os.system(cmd_run_backup)
+	except Exception as e:
+		n -= 1
+		if(n > 0):
+			inform("AUTOBACKUP: start_backup() failed, trying again")
+			start_backup(n)
+		inform("AUTOBACKUP: startup_backup() failed! -> {}".format(e))
 
 
 
@@ -119,69 +152,52 @@ def process_check(proc_data):
 		else
 	        echo "dead"
 		fi""".format(proc_data)
-		status = subprocess.check_output(cmd, shell=True)
-		return status.decode("utf-8").strip("\n")
-	except:
-		print("process_status_test() failed")
+		return send_cmd_parse_return(cmd)
+	except Exception as e:
+		inform("AUTOBACKUP: process_check() failed! -> {}".format(e))
+######################################################
 
 
 
 
 
-config = configparser.ConfigParser()
-
-period = {
-	"week": 604800,
-	"day": 86400,
-	"month": 2629743,
-	"test":5
-}
+####initiation of db for test purposes####
+#database.write("onoff", "0")
+#database.write("backingup", "0")
+##################need to be erased for reallife execution
 
 
 
-for i in range(100):  #cron ise dongu gereksiz #supervisorctl ile kontrol edilecek!
+#
+######################################################
+for i in range(3): #-> dongu supervisorctl ile çalışacak
+	#before backup process
 	while(database.read("onoff") == 0):
-		print("1")
+		inform("AUTOBACKUP: backup_machine turning on")
 		turn_on()
-		print("2")
-		#checking whether remote machine is turned on
-		while(pinger.is_online(ip_bp) != True):
-			time.sleep(wait_betw_pingchecks)
-			print("still offline")
-		print("online!")
-		print("3")
+		while(pinger.is_online(ip_backup) != True):
+			inform("AUTOBACKUP: backup machine still offline, waiting for boot")
+		inform("AUTOBACKUP: backup_machine online!")
 		time.sleep(wait_after_pingcheck_done)
-		print("4")
-		print("5")
-		start_backup()
-		print("6")
+		inform("AUTOBACKUP: backup started")
+		start_backup(5)
 		database.write("backingup", "1")
 		database.write("onoff", "1")
-		print("7")
-	#
+
+	#after backup process
 	while(database.read("onoff") == 1):
-		print("8")
 		while(database.read("backingup") == 1):
-			print("9")
-			#checking whether the backup process is still alive
-			# proc_status = process_status_test()
-			print("10")
-			while(process_check() == "alive"):
+			while(process_check(proc_to_check) == "alive"):
 				time.sleep(1)
-			print("11")
+			inform("AUTOBACKUP: backup done")
 			database.write("backingup", "0")
-		print("12")
-		turn_off()	
-		print("13")
+		inform("AUTOBACKUP: shutting down")
+		turn_off()
 		database.write("onoff","0")
-		print("14")
-	#entering the unixtime of current backup period
+	inform("AUTOBACKUP: entering wait_for_next_period")
 	database.write("runtime", time.time())
-	while((time.time() - database.read("runtime")) < period[nextbp_p]):
-		print("waiting for next backup period")
-		time.sleep(1)
-	print("final 15 congrats")
-
-####bu script rpi-r tarafından supervisorctl/cron ile çalıştırılacak
-
-
+	inform("AUTOBACKUP: waiting for next backup period")
+	while((time.time() - database.read("runtime")) < period[next_backup_period]):
+			if(((time.time() - database.read("runtime") < (int(period["day"])+50)) and (time.time() - database.read("runtime") > (int(period["day"])-50)))):
+				inform("AUTOBACKUP: 1 day left for next backup period")
+			time.sleep(sleep_time)

@@ -1,1 +1,4 @@
 *.log
+*.pyc
+*.ini
+__pycache__
