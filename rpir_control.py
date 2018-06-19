@@ -131,7 +131,7 @@ def start_backup(n):
 		if(next_backup_period == "test"):
 			inform("AUTOBACKUP: running backup, test run (test_proc.sh)")
 			os.system("sh {}/{}".format(runtime_path, run_test_proc))
-		elif(bp_p == "production"):
+		else:
 			inform("AUTOBACKUP: running bp_all.sh ")
 			os.system(cmd_run_backup)
 	except Exception as e:
