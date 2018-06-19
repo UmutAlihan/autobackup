@@ -31,7 +31,7 @@ runtime_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfr
 
 #period related variables
 ######################################################
-next_backup_period = "test"
+next_backup_period = "day"
 if(next_backup_period == "test"): sleep_time = 1
 else: sleep_time = 60
 period = {
@@ -72,6 +72,11 @@ cmd_run_backup = "ssh uad@{} 'sh /home/uad/backup/bp_all.sh'".format(ip_backup)
 cmd_shutdown = "ssh uad@{} 'shutdown -h now'".format(ip_backup)
 cmd_turn_on = "/usr/bin/python3 {}/servo_button.py".format(runtime_path)
 run_test_proc = "test_proc.sh"
+run_proc = "bp_all.sh"
+if(next_backup_period  == "test"):
+	proc_to_check = run_test_proc
+else:
+	proc_to_check = run_proc
 ######################################################
 
 
@@ -99,7 +104,7 @@ def turn_on():
 		os.system(cmd_turn_on)
 	except Exception as e:
 		inform("AUTOBACKUP: turn_on() failed! -> {}".format(e))
-		
+
 
 
 def turn_off():
@@ -182,14 +187,14 @@ for i in range(3): #-> dongu supervisorctl ile çalışacak
 	#after backup process
 	while(database.read("onoff") == 1):
 		while(database.read("backingup") == 1):
-			while(process_check(run_test_proc) == "alive"):
+			while(process_check(proc_to_check) == "alive"):
 				time.sleep(1)
 			inform("AUTOBACKUP: backup done")
 			database.write("backingup", "0")
 		inform("AUTOBACKUP: shutting down")
 		turn_off()
 		database.write("onoff","0")
-	inform("AUTOBACKUP: entering wait_for_next_period")	
+	inform("AUTOBACKUP: entering wait_for_next_period")
 	database.write("runtime", time.time())
 	inform("AUTOBACKUP: waiting for next backup period")
 	while((time.time() - database.read("runtime")) < period[next_backup_period]):
