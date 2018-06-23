@@ -69,7 +69,7 @@ servo_off_angle = 60
 #obvious as in var name
 ######################################################
 cmd_run_backup = "ssh uad@{} 'sh /home/uad/backup/bp_all.sh'".format(ip_backup)
-cmd_shutdown = "ssh uad@{} 'shutdown -h now'".format(ip_backup)
+cmd_shutdown = "ssh uad@{} 'sudo kapan'".format(ip_backup)
 cmd_turn_on = "/usr/bin/python3 {}/servo_button.py".format(runtime_path)
 run_test_proc = "test_proc.sh"
 run_proc = "bp_all.sh"
