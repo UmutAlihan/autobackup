@@ -12,13 +12,6 @@ init = str.encode('2')
 ser.write(init)
 time.sleep(0.1)
 
-"""while 1:
-#  ser.write(char(on))
-	ser.write(on)
-	print("on")
-	time.sleep(5)"""
-
-ser.write(on)
 time.sleep(1)
 ser.write(on)
-print("on")
+
