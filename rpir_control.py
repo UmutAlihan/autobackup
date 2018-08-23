@@ -31,7 +31,7 @@ runtime_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfr
 
 #period related variables
 ######################################################
-next_backup_period = "day"
+next_backup_period = "test"
 if(next_backup_period == "test"): sleep_time = 1
 else: sleep_time = 60
 period = {
@@ -47,7 +47,7 @@ period = {
 ######################################################
 test_ip_state_on = "192.168.1.199"
 ip_backup = "192.168.1.202"
-ip_afsar = "192.168.1.200"
+ip_afsar = "192.168.1.210"
 check_my_ip = "ifconfig"
 ######################################################
 
@@ -70,7 +70,7 @@ servo_off_angle = 60
 ######################################################
 cmd_run_backup = "ssh uad@{} 'sh /home/uad/backup/bp_all.sh'".format(ip_backup)
 cmd_shutdown = "ssh uad@{} 'sudo kapan'".format(ip_backup)
-cmd_turn_on = "/usr/bin/python3 {}/servo_button.py".format(runtime_path)
+cmd_turn_on = "/usr/bin/python3 {}/afsar-rpiw-con.py".format(runtime_path)
 run_test_proc = "test_proc.sh"
 run_proc = "bp_all.sh"
 if(next_backup_period  == "test"):
