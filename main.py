@@ -13,13 +13,8 @@ import database
 import process_checker
 
 
-
-###TODO:
-#database folder need to be in flash disk to avoid sdcard corruptions
-#telegram-send for all print statements
-
 ###This script should run on home server
-#rpi-r
+#afsar
 
 
 #some vars
@@ -31,7 +26,7 @@ runtime_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfr
 
 #period related variables
 ######################################################
-next_backup_period = "test"
+next_backup_period = "day"
 if(next_backup_period == "test"): sleep_time = 1
 else: sleep_time = 60
 period = {
@@ -61,18 +56,18 @@ wait_after_pingcheck_done = 5
 
 #obvious as in var name
 ######################################################
-servo_on_angle = 10
-servo_off_angle = 60
+#servo_on_angle = 10
+#servo_off_angle = 60
 ######################################################
 
  
 #obvious as in var name
 ######################################################
-cmd_run_backup = "ssh uad@{} 'sh /home/uad/backup/bp_all.sh'".format(ip_backup)
+cmd_run_backup = "ssh uad@{} 'sh /home/uad/backup/bp_main.sh'".format(ip_backup)
 cmd_shutdown = "ssh uad@{} 'sudo kapan'".format(ip_backup)
-cmd_turn_on = "/usr/bin/python3 {}/afsar-rpiw-con.py".format(runtime_path)
+cmd_turn_on = "/usr/bin/python3 {}/servo.py".format(runtime_path)
 run_test_proc = "test_proc.sh"
-run_proc = "bp_all.sh"
+run_proc = "bp_main.sh"
 if(next_backup_period  == "test"):
 	proc_to_check = run_test_proc
 else:
@@ -132,7 +127,7 @@ def start_backup(n):
 			inform("AUTOBACKUP: running backup, test run (test_proc.sh)")
 			os.system("sh {}/{}".format(runtime_path, run_test_proc))
 		else:
-			inform("AUTOBACKUP: running bp_all.sh ")
+			inform("AUTOBACKUP: running " + run_proc)
 			os.system(cmd_run_backup)
 	except Exception as e:
 		n -= 1
@@ -159,8 +154,6 @@ def process_check(proc_data):
 
 
 
-
-
 ####initiation of db for test purposes####
 #database.write("onoff", "0")
 #database.write("backingup", "0")
@@ -168,7 +161,7 @@ def process_check(proc_data):
 
 
 
-#
+#main
 ######################################################
 for i in range(3): #-> dongu supervisorctl ile çalışacak
 	#before backup process
