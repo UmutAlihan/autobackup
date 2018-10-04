@@ -33,7 +33,7 @@ period = {
 	"week": 604800,
 	"day": 86400,
 	"month": 2629743,
-	"test":5
+	"test":10
 }
 ######################################################
 
@@ -60,7 +60,7 @@ wait_after_pingcheck_done = 5
 #servo_off_angle = 60
 ######################################################
 
- 
+
 #obvious as in var name
 ######################################################
 cmd_run_backup = "ssh uad@{} 'sh /home/uad/backup/bp_main.sh'".format(ip_backup)
@@ -71,7 +71,7 @@ run_proc = "bp_main.sh"
 if(next_backup_period  == "test"):
 	proc_to_check = run_test_proc
 else:
-	proc_to_check = run_proc
+	proc_to_check = run_test_proc
 ######################################################
 
 
