@@ -26,13 +26,14 @@ runtime_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfr
 
 #period related variables
 ######################################################
-next_backup_period = "day"
+next_backup_period = "hour"
 if(next_backup_period == "test"): sleep_time = 1
 else: sleep_time = 60
 period = {
 	"week": 604800,
 	"day": 86400,
 	"month": 2629743,
+	"hour": 3600,
 	"test":10
 }
 ######################################################
