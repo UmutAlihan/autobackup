@@ -26,7 +26,7 @@ runtime_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfr
 
 #period related variables
 ######################################################
-next_backup_period = "hour"
+next_backup_period = "day"
 if(next_backup_period == "test"): sleep_time = 1
 else: sleep_time = 60
 period = {
@@ -34,7 +34,8 @@ period = {
 	"day": 86400,
 	"month": 2629743,
 	"hour": 3600,
-	"test":10
+	"min30": 1800,
+	"test": 10
 }
 ######################################################
 
@@ -64,7 +65,7 @@ wait_after_pingcheck_done = 5
 
 #obvious as in var name
 ######################################################
-cmd_run_backup = "ssh uad@{} 'sh /home/uad/backup/bp_main.sh'".format(ip_backup)
+cmd_run_backup = "ssh uad@{} 'sh /home/uad/commander/bp_main.sh'".format(ip_backup)
 cmd_shutdown = "ssh uad@{} 'sudo kapan'".format(ip_backup)
 cmd_turn_on = "/usr/bin/python3 {}/servo.py".format(runtime_path)
 run_test_proc = "test_proc.sh"
@@ -72,7 +73,7 @@ run_proc = "bp_main.sh"
 if(next_backup_period  == "test"):
 	proc_to_check = run_test_proc
 else:
-	proc_to_check = run_test_proc
+	proc_to_check = run_proc
 ######################################################
 
 
@@ -164,33 +165,33 @@ def process_check(proc_data):
 
 #main
 ######################################################
-for i in range(3): #-> dongu supervisorctl ile çalışacak
+for i in range(300): #-> dongu supervisorctl ile çalışacak
 	#before backup process
-	while(database.read("onoff") == 0):
-		inform("AUTOBACKUP: backup_machine turning on")
-		turn_on()
-		while(pinger.is_online(ip_backup) != True):
-			inform("AUTOBACKUP: backup machine still offline, waiting for boot")
-		inform("AUTOBACKUP: backup_machine online!")
-		time.sleep(wait_after_pingcheck_done)
-		inform("AUTOBACKUP: backup started")
-		start_backup(5)
-		database.write("backingup", "1")
-		database.write("onoff", "1")
-
-	#after backup process
-	while(database.read("onoff") == 1):
-		while(database.read("backingup") == 1):
-			while(process_check(proc_to_check) == "alive"):
-				time.sleep(1)
-			inform("AUTOBACKUP: backup done")
-			database.write("backingup", "0")
-		inform("AUTOBACKUP: shutting down")
-		turn_off()
-		database.write("onoff","0")
-	inform("AUTOBACKUP: entering wait_for_next_period")
-	database.write("runtime", time.time())
-	inform("AUTOBACKUP: waiting for next backup period")
+	while((time.time() - database.read("runtime")) >= period[next_backup_period]):
+		while(database.read("onoff") == 0):
+			inform("AUTOBACKUP: backup_machine turning on")
+			turn_on()
+			while(pinger.is_online(ip_backup) != True):
+				inform("AUTOBACKUP: backup machine still offline, waiting for boot")
+			inform("AUTOBACKUP: backup_machine online!")
+			database.write("onoff","1")
+			time.sleep(wait_after_pingcheck_done)
+			inform("AUTOBACKUP: backup started")
+			database.write("backingup", "1")
+			start_backup(5)
+		#after backup process
+		while(database.read("onoff") == 1):
+			while(database.read("backingup") == 1):
+				while(process_check(proc_to_check) == "alive"):
+					time.sleep(1)
+				inform("AUTOBACKUP: backup done")
+				database.write("backingup", "0")
+			inform("AUTOBACKUP: shutting down")
+			turn_off()
+			database.write("onoff","0")
+		inform("AUTOBACKUP: entering wait_for_next_period")
+		database.write("runtime", time.time())
+		inform("AUTOBACKUP: waiting for next backup period")
 	while((time.time() - database.read("runtime")) < period[next_backup_period]):
 			if(((time.time() - database.read("runtime") < (int(period["day"])+50)) and (time.time() - database.read("runtime") > (int(period["day"])-50)))):
 				inform("AUTOBACKUP: 1 day left for next backup period")

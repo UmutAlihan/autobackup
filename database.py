@@ -19,3 +19,4 @@ def write(data, new_state):
 config = configparser.ConfigParser()
 
 
+#read(
